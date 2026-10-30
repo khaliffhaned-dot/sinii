@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ms" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Sinii Kira — Enterprise E-Commerce Financial Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slate900: '#0F172A',
+            slate800: '#1E293B',
+            slate700: '#334155',
+            slate200: '#E2E8F0',
+            slate100: '#F1F5F9',
+            slate50: '#F8FAFC',
+            siniipink: '#FF00FF',
+            gold: '#D4AF37',
+            ok: '#059669',
+            warn: '#D97706',
+            danger: '#DC2626'
+          },
+          fontFamily: {
+            sans: ['Instrument Sans', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #F8FAFC;
+      color: #334155;
+      font-family: "Instrument Sans", system-ui, sans-serif;
+      padding: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    :focus-visible { outline: 2px solid #0F172A; outline-offset: 2px; }
+    
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .in {
+      display: flex; align-items: center;
+      border: 1px solid #CBD5E1; border-radius: 8px;
+      background: #FFFFFF; min-height: 44px;
+      padding: 0 12px; gap: 6px;
+    }
+    .in:focus-within { border-color: #0F172A; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1); }
+    .in input {
+      border: 0; outline: 0; background: transparent;
+      font: 600 15px "Instrument Sans", sans-serif; color: #0F172A;
+      width: 100%; padding: 10px 0;
+    }
+    .pill {
+      min-height: 40px; padding: 6px 14px; border-radius: 999px;
+      border: 1px solid #CBD5E1; background: #FFFFFF;
+      color: #334155; font: 600 13px sans-serif; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .pill[aria-selected="true"] {
+      background: #0F172A; color: #FFFFFF; border-color: #0F172A;
+    }
+    .badge {
+      font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px;
+    }
+    .badge-ok { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+    .badge-warn { background: #FFFBEB; color: #D97706; border: 1px solid #FDE68A; }
+    
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6);
+      display: flex; align-items: center; justify-content: center; z-index: 100;
+      padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    .modal-backdrop.show { opacity: 1; pointer-events: auto; }
+    .modal-content {
+      background: #FFFFFF; border-radius: 16px; max-width: 650px; width: 100%;
+      max-height: 85vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: #0F172A; color: #FFFFFF;
+      padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 13px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); z-index: 999;
+      transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Print Styles for Enterprise Audit */
+    @media print {
+      body { background: white !important; color: black !important; }
+      header, .bg-amber-50, footer, #toast, .pill, #resetBtn, #exportAuditBtn, #openLegalBtn, #viewLanding, #viewTabs { display: none !important; }
+      .card { border: 1px solid #ddd !important; box-shadow: none !important; page-break-inside: avoid; margin-bottom: 20px; }
+      .bg-slate900 { background: white !important; color: black !important; border: 2px solid black; }
+      .text-white { color: black !important; }
+      .text-slate-300, .text-slate-400 { color: #333 !important; }
+      .text-emerald-400 { color: #059669 !important; }
+      .border-slate-800 { border-color: #ddd !important; }
+      input, select { border: 1px solid #ccc !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate50 text-slate700">
+  <div class="wrap">
+    <!-- Enterprise Navigation Header -->
+    <header class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate200">
+      <div class="flex items-center gap-3">
+        <!-- Logo -->
+        <div class="flex items-center flex-shrink-0">
+          <span class="font-black text-[32px] tracking-tight font-sans text-slate900 flex items-baseline select-none">
+            S
+            <span class="relative inline-block">
+              <span class="absolute bottom-[0.75em] left-1/2 -translate-x-1/2 w-[0.22em] h-[0.22em] bg-slate900"></span>
+              ı
+            </span>
+            n
+            <span class="relative inline-block">
+              <span class="absolute bottom-[0.75em] left-1/2 -translate-x-1/2 w-[0.22em] h-[0.22em] bg-slate900"></span>
+              ı
+            </span>
+            <span class="relative inline-block ml-[2px]">
+              <span class="absolute bottom-[0.73em] left-1/2 -translate-x-1/2 w-[0.25em] h-[0.25em] bg-gold rotate-45 border-[1.5px] border-slate900"></span>
+              ı
+            </span>
+          </span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-lg text-slate900 tracking-tight">Sinii Kira <span class="hidden sm:inline-block font-normal text-slate-400 ml-1">| Enterprise Suite</span></h1>
+            <span class="bg-slate900 text-white font-bold text-[10px] px-2 py-0.5 rounded uppercase tracking-wider hidden sm:inline-block">MY Legal</span>
+          </div>
+          <p class="text-xs text-slate-500">Kalkulator Audit Yuran, Reseller & Keuntungan E-Dagang</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
+        <div class="flex bg-slate200/60 p-1 rounded-lg border border-slate200 text-xs font-semibold" id="viewTabs">
+          <button type="button" id="tabLanding" class="px-4 py-2 rounded-md transition text-slate-900 bg-white shadow-sm border border-slate-200/50">Laman Utama</button>
+          <button type="button" id="tabCalculator" class="px-4 py-2 rounded-md transition text-slate-500 hover:text-slate-900">Kalkulator Audit</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="openLegalBtn" class="pill text-xs px-3 hidden sm:flex">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Pematuhan</span>
+          </button>
+          <button type="button" id="exportAuditBtn" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate900 text-white font-semibold text-xs shadow hover:bg-slate800 transition">
+            <svg class="w-4 h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span>Eksport Laporan</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- LANDING PAGE VIEW -->
+    <div id="viewLanding" class="space-y-6 mb-12">
+      <section class="bg-slate900 rounded-3xl p-8 sm:p-14 flex flex-col items-center text-center shadow-xl relative overflow-hidden border border-slate800">
+        <div class="absolute inset-0 opacity-[0.15] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold via-slate900 to-slate900"></div>
+        <div class="relative z-10 w-full max-w-4xl mx-auto">
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate800 border border-slate700 text-gold text-[11px] font-bold uppercase tracking-widest mb-6 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-gold animate-pulse"></span> E-Commerce Audit Suite 2026
+          </span>
+          <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight mb-6 leading-tight">
+            Stop Bocorkan Margin Anda. <br><span class="text-gold">Audit Terus Bos.</span>
+          </h1>
+          <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+            Sistem kecerdasan kewangan enterprise untuk mengira pendapatan bersih sebenar merentas Shopee, TikTok Shop, Lazada, PGMall & ejen Reseller/Afiliat. Confirm steady, data tak leak.
+          </p>
+          <button type="button" id="heroStartBtn" class="bg-gold text-slate900 px-8 py-4 rounded-xl font-bold text-sm sm:text-base hover:bg-yellow-500 hover:scale-[1.02] transition-all shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+            Mula Audit Transaksi Sekarang &rarr;
+          </button>
+        </div>
+      </section>
+
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 border-slate200 hover:border-slate300 transition shadow-sm hover:shadow-md">
+          <div class="w-12 h-12 rounded-xl bg-slate100 border border-slate200 flex items-center justify-center text-slate900 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          </div>
+          <h3 class="font-bold text-lg text-slate900 mb-2">Kiraan Reseller & Afiliat</h3>
+          <p class="text-xs text-slate-600 leading-relaxed font-medium">Sokongan pengiraan margin bagi komisen ejen reseller, dropshipper, dan potongan afiliat secara serentak.</p>
+        </div>
+        <div class="card p-6 border-slate200 hover:border-slate300 transition shadow-sm hover:shadow-md">
+          <div class="w-12 h-12 rounded-xl bg-slate100 border border-slate200 flex items-center justify-center text-slate900 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          </div>
+          <h3 class="font-bold text-lg text-slate900 mb-2">100% Data Selamat (PDPA)</h3>
+          <p class="text-xs text-slate-600 leading-relaxed font-medium">No tracking, no remote servers. Semua pengiraan dibuat terus dalam peranti anda (Client-Side). Data kewangan confirm tak leak.</p>
+        </div>
+        <div class="card p-6 border-slate200 hover:border-slate300 transition shadow-sm hover:shadow-md">
+          <div class="w-12 h-12 rounded-xl bg-slate100 border border-slate200 flex items-center justify-center text-slate900 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          </div>
+          <h3 class="font-bold text-lg text-slate900 mb-2">Target Margin Bersih</h3>
+          <p class="text-xs text-slate-600 leading-relaxed font-medium">Masukkan margin bersih (%) yang bos nak, dan sistem automatik akan reverse-engineer harga jualan minimum yang patut diletakkan.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- CALCULATOR VIEW (Wrapped & Hidden Initially) -->
+    <div id="viewCalculator" class="hidden space-y-6">
+      <!-- Malaysian Legal Compliance Notice Banner -->
+      <div class="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 flex items-start gap-3">
+        <svg class="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div>
+          <strong class="font-bold block text-amber-950 mb-1">Pemberitahuan Pematuhan & Penafian Legal:</strong>
+          Kadar komisen adalah sekadar rujukan. Sila gunakan kadar rasmi dari Seller Centre anda. Data anda disulitkan dan diproses pada peranti anda sahaja (Client-Side). Aplikasi dikuasakan oleh <strong class="text-amber-950">www.sinii.my</strong>. Untuk sokongan rasmi, hubungi <a href="mailto:admin@sinii.my" class="underline font-bold">admin@sinii.my</a>.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Inputs (5 Cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          <!-- Sale inputs -->
+          <section class="card" id="s-sale" aria-labelledby="h-sale">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-bold text-base text-slate900" id="h-sale">1. Butiran Transaksi Jualan</h2>
+              <button type="button" id="resetBtn" class="text-xs text-slate-500 hover:text-slate-900 font-semibold underline">Reset Lalai</button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex flex-col gap-1">
+                <label for="price" class="text-xs font-semibold text-slate-700">Harga Jualan</label>
+                <div class="in"><span>RM</span><input id="price" type="number" inputmode="decimal" min="0" step="0.01" value="89"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="cost" class="text-xs font-semibold text-slate-700">Kos Modal (COGS)</label>
+                <div class="in"><span>RM</span><input id="cost" type="number" inputmode="decimal" min="0" step="0.01" value="40"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="ship" class="text-xs font-semibold text-slate-700">Pos (Dibayar Pembeli)</label>
+                <div class="in"><span>RM</span><input id="ship" type="number" inputmode="decimal" min="0" step="0.01" value="0"></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="aff" class="text-xs font-semibold text-slate-700">Komisen Afiliat</label>
+                <div class="in"><input id="aff" type="number" inputmode="decimal" min="0" max="100" step="0.5" value="0"><span>%</span></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="reseller" class="text-xs font-semibold text-slate-700">Komisen / Margin Reseller</label>
+                <div class="in"><input id="reseller" type="number" inputmode="decimal" min="0" max="100" step="0.5" value="0"><span>%</span></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="orders" class="text-xs font-semibold text-slate-700">Pesanan Selesai / Bulan</label>
+                <div class="in"><input id="orders" type="number" inputmode="numeric" min="0" step="1" value="100"></div>
+              </div>
+              <div class="col-span-2">
+                <span class="text-[11px] text-slate-500">Unjuran pesanan untuk kiraan penjimatan bulanan.</span>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-slate-200 space-y-2">
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" id="newShop" class="mt-0.5 w-4 h-4 accent-slate900 rounded">
+                <span class="text-xs font-semibold text-slate-800">
+                  Akaun Kedai Baharu Shopee
+                  <span class="block text-[11px] font-normal text-slate-500 mt-0.5">Pengecualian komisen (120 hari / 200 order pertama).</span>
+                </span>
+              </label>
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" id="supportWaived" class="mt-0.5 w-4 h-4 accent-slate900 rounded">
+                <span class="text-xs font-semibold text-slate-800">
+                  Pengecualian Yuran Sokongan
+                  <span class="block text-[11px] font-normal text-slate-500 mt-0.5">Penjual mikro layak mendapat pengecualian RM0.54.</span>
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <!-- Rate Editor -->
+          <section class="card" aria-labelledby="h-rates">
+            <h2 class="font-bold text-base text-slate900" id="h-rates">2. Audit & Penyesuaian Kadar</h2>
+            <p class="text-xs text-slate-500 mt-1">Pilih platform dan sesuaikan kadar yuran mengikut penyata rasmi anda.</p>
+
+            <div class="flex gap-1.5 flex-wrap my-3" role="tablist" id="tabs"></div>
+            <div id="editor" class="bg-slate50 rounded-lg p-3 border border-slate200 space-y-4"></div>
+          </section>
+        </div>
+
+        <!-- Right Column: Financial Results & Comparison (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          <!-- Hero Summary Result Card -->
+          <section class="bg-slate900 text-white rounded-2xl p-6 shadow-xl" aria-live="polite">
+            <div id="hero" class="space-y-4"></div>
+          </section>
+
+          <!-- Platform Comparison Matrix -->
+          <section class="card" aria-labelledby="h-cmp">
+            <div class="flex items-center justify-between flex-wrap gap-2 mb-4">
+              <div>
+                <h2 class="font-bold text-base text-slate900" id="h-cmp">3. Matriks Perbandingan Platform</h2>
+                <p class="text-xs text-slate-500" id="cmpnote"></p>
+              </div>
+              <div class="flex bg-slate100 p-1 rounded-lg border border-slate200 text-xs font-semibold">
+                <button type="button" id="viewCards" class="px-3 py-1.5 rounded-md transition text-slate-900 bg-white shadow-sm" aria-pressed="true">Kad Ringkas</button>
+                <button type="button" id="viewTable" class="px-3 py-1.5 rounded-md transition text-slate-500 hover:text-slate-900" aria-pressed="false">Jadual Data</button>
+              </div>
+            </div>
+
+            <div class="grid gap-3" id="cmp"></div>
+            <div class="overflow-x-auto rounded-lg border border-slate200" id="cmpTable" hidden></div>
+            <p class="text-xs text-slate-500 mt-3" id="gap"></p>
+          </section>
+
+          <!-- Break-Even Margin Target Calculator -->
+          <section class="card" aria-labelledby="h-be">
+            <h2 class="font-bold text-base text-slate900" id="h-be">4. Kalkulator Harga Sasaran Margin Bersih</h2>
+            <p class="text-xs text-slate-500 mt-1">Kira harga jualan minimum yang diperlukan untuk mencapai pulangan bersih yang diinginkan.</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              <div class="flex flex-col gap-1">
+                <label for="targetPct" class="text-xs font-semibold text-slate-700">Margin Bersih Sasaran (%)</label>
+                <div class="in"><input id="targetPct" type="number" inputmode="decimal" min="0" max="90" step="0.5" value="30"><span>%</span></div>
+              </div>
+              <div class="flex flex-col gap-1">
+                <label for="targetPlat" class="text-xs font-semibold text-slate-700">Platform Sasaran</label>
+                <div class="in px-1">
+                  <select id="targetPlat" class="w-full h-full border-0 bg-transparent font-semibold text-sm text-slate-900 px-2 outline-none cursor-pointer">
+                    <option value="shopee">Shopee</option>
+                    <option value="tiktok">TikTok Shop</option>
+                    <option value="lazada">Lazada</option>
+                    <option value="pgmall">PGMall</option>
+                    <option value="website">Laman Web Sendiri</option>
+                    <option value="sini">Sinii (Akan Datang)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-900 leading-relaxed" id="targetResult"></div>
+          </section>
+        </div>
+      </div>
+    </div> <!-- Close viewCalculator Grid Wrap -->
+
+    <!-- Enterprise Footer -->
+    <footer class="mt-12 pt-6 border-t border-slate200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>&copy; 2026 Sinii Kira Enterprise (<a href="https://www.sinii.my" class="hover:underline font-semibold">www.sinii.my</a>). Hubungi: <a href="mailto:admin@sinii.my" class="underline">admin@sinii.my</a>. Pematuhan Akta E-Dagang & Akta Perlindungan Pengguna 1999.</p>
+      <div class="flex items-center gap-4">
+        <a href="#" id="footerLegalLink" class="hover:underline">Dasar Privasi & Penafian</a>
+        <span>•</span>
+        <span class="text-emerald-600 font-semibold flex items-center gap-1">
+          <span class="w-2 h-2 rounded-full bg-emerald-600 inline-block"></span> Selamat & Disulitkan
+        </span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Legal Compliance Modal -->
+  <div id="legalModal" class="modal-backdrop">
+    <div class="modal-content space-y-4">
+      <div class="flex items-center justify-between border-b border-slate200 pb-3">
+        <h3 class="font-bold text-lg text-slate900">Pematuhan Undang-Undang & Penafian Rasmi (sinii.my)</h3>
+        <button type="button" id="closeLegalBtn" class="text-slate-400 hover:text-slate-900 font-bold text-xl px-2">&times;</button>
+      </div>
+      <div class="text-xs text-slate-600 space-y-3 leading-relaxed">
+        <p><strong>1. Kepatuhan Cukai Malaysia (SST 8%):</strong> Semua pengiraan yuran dan transaksi mengambil kira kadar Cukai Jualan dan Perkhidmatan (SST) standard sebanyak 8% di Malaysia yang berkuatkuasa bagi perkhidmatan digital dan platform e-dagang.</p>
+        <p><strong>2. Akta Perlindungan Data Peribadi 2010 (PDPA):</strong> Confirm steady, data tak leak. Perisian ini beroperasi sepenuhnya pada pelayar peribadi anda (Client-Side Architecture). Tiada rekod kewangan, harga produk, atau data perniagaan yang dimuat naik ke pelayan luar, menjamin kerahsiaan data perniagaan anda sepenuhnya.</p>
+        <p><strong>3. Penafian Pihak Ketiga & Pemilikan Hak Cipta:</strong> Sinii Kira adalah aplikasi utiliti kewangan bebas yang dimiliki oleh <strong>Sinii Malaysia (www.sinii.my)</strong>. Nama platform e-dagang seperti Shopee, TikTok Shop, Lazada, dan PGMall digunakan semata-mata sebagai rujukan industri terbuka. Aplikasi ini tiada gabungan atau tajaan rasmi daripada syarikat berkenaan.</p>
+        <p><strong>4. Batasan Liabiliti Pemilik Platform (Limitation of Liability):</strong> Semua jawapan dan anggaran harga jualan yang dihasilkan oleh Sinii Kira adalah untuk tujuan perancangan perniagaan sahaja. Pemilik laman web <strong>www.sinii.my</strong> dan pengurusan Sinii tidak akan bertanggungjawab atas sebarang kerugian, salah faham kewangan, atau perbezaan penyata sebenar platform. Penjual dinasihatkan menyemak Seller Centre rasmi secara berkala. Untuk pertanyaan rasmi, lesen perisian, atau aduan, sila hubungi kami di <a href="mailto:admin@sinii.my" class="text-slate-900 font-bold hover:underline">admin@sinii.my</a>.</p>
+      </div>
+      <div class="pt-3 border-t border-slate200 flex justify-end">
+        <button type="button" id="closeLegalBtn2" class="px-4 py-2 bg-slate900 text-white text-xs font-bold rounded-lg hover:bg-slate800">Cun Bos, Faham & Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">Laporan audit berjaya dieksport ke papan klip!</div>
+
+  <script>
+  (function () {
+    var SST = 0.08;
+    var ORDER = ['shopee', 'tiktok', 'lazada', 'pgmall', 'website', 'sini'];
+
+    var ACCLAIRA = { name: 'Acclaira Audit 2026', url: 'https://acclaira.com.my/insights/shopee-seller-fees-malaysia' };
+    var INSELLER_SHOPEE = { name: 'Inseller Malaysia', url: 'https://inseller.my/blog/shopee-seller-fees-malaysia-2026' };
+
+    function defaults() {
+      return {
+        shopee: {
+          name: 'Shopee', planned: false, lines: [
+            { id: 'commission', label: 'Komisen Kategori (Purata)', kind: 'pct', base: 'price', value: 10.26, sst: 'incl', conf: 'example', on: true, waiver: 'newShop',
+              note: 'Anggaran kategori pakaian/fesyen 2026 terangkum SST 8%.' },
+            { id: 'transaction', label: 'Yuran Transaksi Pembayaran', kind: 'pct', base: 'paid', value: 3.78, sst: 'incl', conf: 'estimate', on: true, src: ACCLAIRA,
+              note: 'Dikenakan atas jumlah bayaran pembeli termasuk penghantaran.' },
+            { id: 'support', label: 'Yuran Sokongan / Platform Support', kind: 'flat', value: 0.54, sst: 'incl', conf: 'estimate', on: true, waiver: 'supportWaived', src: INSELLER_SHOPEE,
+              note: 'RM0.50 + 8% SST setiap pesanan selesai.' },
+            { id: 'cashback', label: 'Program Coins / Free Shipping', kind: 'pct', base: 'price', value: 5.94, sst: 'incl', capRm: 108, conf: 'estimate', on: false, optional: true, src: ACCLAIRA,
+              note: 'Pilihan (Maksimum RM108 per item).' }
+          ]
+        },
+        tiktok: {
+          name: 'TikTok Shop', planned: false, lines: [
+            { id: 'commission', label: 'Komisen Marketplace', kind: 'pct', base: 'price', value: 11.34, sst: 'incl', conf: 'example', on: true,
+              note: 'Kadar komisen kategori standard termasuk SST.' },
+            { id: 'transaction', label: 'Yuran Pemprosesan Transaksi', kind: 'pct', base: 'paid', value: 2.16, sst: 'incl', conf: 'estimate', on: true,
+              note: 'Yuran gerbang pembayaran TikTok Shop termasuk SST.' },
+            { id: 'support', label: 'Yuran Sokongan Platform', kind: 'flat', value: 0.54, sst: 'incl', conf: 'estimate', on: true, waiver: 'supportWaived',
+              note: 'RM0.50 + SST berkuatkuasa standard.' }
+          ]
+        },
+        lazada: {
+          name: 'Lazada', planned: false, lines: [
+            { id: 'commission', label: 'Komisen Marketplace', kind: 'pct', base: 'price', value: 12, sst: 'excl', conf: 'example', on: true,
+              note: 'Komisen asas mengikut kategori (belum termasuk SST).' },
+            { id: 'payment', label: 'Yuran Pembayaran (Payment Fee)', kind: 'pct', base: 'paid', value: 3.78, sst: 'incl', conf: 'estimate', on: true,
+              note: 'Kadar rasmi terkini 3.5% + SST 8%.' }
+          ]
+        },
+        pgmall: {
+          name: 'PGMall', planned: false, lines: [
+            { id: 'commission', label: 'Komisen Penjual', kind: 'pct', base: 'price', value: 5, sst: 'excl', conf: 'example', on: true,
+              note: 'Komisen rasmi platform PGMall.' },
+            { id: 'transaction', label: 'Yuran Transaksi', kind: 'pct', base: 'paid', value: 1.5, sst: 'incl', conf: 'estimate', on: true,
+              note: 'Caj pemprosesan pembayaran.' }
+          ]
+        },
+        website: {
+          name: 'Laman Web Sendiri', planned: false, lines: [
+            { id: 'payment', label: 'Gerbang Pembayaran (FPX/Stripe)', kind: 'pct', base: 'paid', value: 2.5, sst: 'incl', conf: 'estimate', on: true,
+              note: 'Purata caj gerbang tempatan (Billplz / ToyyibPay / Stripe).' },
+            { id: 'fixed', label: 'Caj Tetap Per Transaksi', kind: 'flat', value: 1.00, sst: 'incl', conf: 'estimate', on: true, optional: true,
+              note: 'Caj tetap perbankan internet.' }
+          ]
+        },
+        sini: {
+          name: 'Sinii (Akan Datang)', planned: true, affiliateFromPlatform: true, lines: [
+            { id: 'commission', label: 'Komisen Sinii', kind: 'pct', base: 'price', value: 0, sst: 'incl', conf: 'planned', on: true, note: 'Struktur telus akan diumumkan.' },
+            { id: 'payment', label: 'Pemprosesan Bayaran', kind: 'pct', base: 'price', value: 0, sst: 'incl', conf: 'planned', on: true },
+            { id: 'pass', label: 'Sinii Pass', kind: 'flat', value: 0, sst: 'incl', conf: 'planned', on: true }
+          ]
+        }
+      };
+    }
+
+    function createState() {
+      return { price: 89, cost: 40, ship: 0, orders: 100, aff: 0, reseller: 0, newShop: false, supportWaived: false, plat: 'shopee', platforms: defaults() };
+    }
+
+    function sen(rm) { return Math.round(Number.isFinite(rm) ? rm * 100 : 0); }
+    function num(v) { var n = Number(v); return Number.isFinite(n) && n > 0 ? n : 0; }
+
+    function lineAmount(l, P, Sh) {
+      var raw;
+      if (l.kind === 'flat') raw = num(l.value) * 100;
+      else raw = ((l.base === 'paid' ? P + Sh : P) * num(l.value)) / 100;
+      if (l.sst === 'excl') raw *= 1 + SST;
+      if (l.capRm != null) raw = Math.min(raw, l.capRm * 100);
+      return Math.round(raw);
+    }
+
+    function calc(state, platId, priceOverrideRm) {
+      var p = state.platforms[platId];
+      var P = sen(priceOverrideRm != null ? priceOverrideRm : state.price);
+      var Sh = sen(state.ship), C = sen(state.cost);
+      var lines = [], fee = 0, hasExample = false;
+
+      p.lines.forEach(function (l) {
+        var off = l.on === false;
+        var waived = !!(l.waiver && state[l.waiver] && (l.waiver !== 'newShop' || platId === 'shopee'));
+        var amount = off || waived ? 0 : lineAmount(l, P, Sh);
+        if (!off && !waived && l.conf === 'example') hasExample = true;
+        fee += amount;
+        lines.push({ id: l.id, label: l.label, amount: amount, off: off, waived: waived });
+      });
+
+      var aff = p.affiliateFromPlatform ? 0 : Math.round((P * num(state.aff)) / 100);
+      if (aff) lines.push({ id: 'affiliate', label: 'Komisen Afiliat', amount: aff, off: false, waived: false });
+      fee += aff;
+
+      var resellerCut = Math.round((P * num(state.reseller)) / 100);
+      if (resellerCut) lines.push({ id: 'reseller', label: 'Margin / Komisen Reseller', amount: resellerCut, off: false, waived: false });
+      fee += resellerCut;
+
+      var keep = P - fee;
+      var profit = keep - C;
+
+      return {
+        platform: platId, name: p.name, planned: p.planned, isComingSoon: (p.planned && platId === 'sini'), lines: lines,
+        price: P, fee: fee, keep: keep, profit: profit,
+        feePct: P ? (fee / P) * 100 : 0, marginPct: P ? (profit / P) * 100 : 0, hasExample: hasExample
+      };
+    }
+
+    function minPrice(state, platId, targetPct) {
+      var lo = 0.01, hi = 1000000;
+      var m = function (x) { return calc(state, platId, x).marginPct; };
+      if (m(hi) < targetPct) return null;
+      for (var i = 0; i < 80; i++) {
+        var mid = (lo + hi) / 2;
+        if (m(mid) >= targetPct) hi = mid; else lo = mid;
+      }
+      return Math.ceil(hi * 100) / 100;
+    }
+
+    function compare(state) {
+      var rows = ORDER.map(function (id) { return calc(state, id); });
+      var ready = rows.filter(function (r) { return !r.planned && !r.hasExample; });
+      var best = ready.length >= 2 ? ready.slice().sort(function (a, b) { return b.keep - a.keep; })[0] : null;
+      return { rows: rows, ready: ready, best: best };
+    }
+
+    var CONF = { example: 'Contoh', estimate: 'Anggaran', you: 'Anda Masukkan', planned: 'Cadangan' };
+
+    function $(id) { return document.getElementById(id); }
+    function money(n) {
+      n = n / 100;
+      if (n >= 1000) return 'RM' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      return 'RM' + n.toFixed(2);
+    }
+    function fmt(senVal) { return (senVal < 0 ? '-' : '') + money(Math.abs(senVal)); }
+    function pct(n) { return n.toFixed(1) + '%'; }
+    function el(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text != null) e.textContent = text;
+      return e;
+    }
+    function chip(conf) {
+      var c = el('span', 'badge ' + (conf === 'you' ? 'badge-ok' : 'badge-warn'), CONF[conf]);
+      return c;
+    }
+
+    var S = createState();
+    var viewMode = 'cards';
+
+    function readSale() {
+      S.price = parseFloat($('price').value) || 0;
+      S.cost = parseFloat($('cost').value) || 0;
+      S.ship = parseFloat($('ship').value) || 0;
+      S.aff = Math.min(100, parseFloat($('aff').value) || 0);
+      S.reseller = Math.min(100, parseFloat($('reseller').value) || 0);
+      S.orders = Math.floor(parseFloat($('orders').value) || 0);
+      S.newShop = $('newShop').checked;
+      S.supportWaived = $('supportWaived').checked;
+    }
+
+    var LOGO_IMG = {
+      shopee: "data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%23EE4D2D'/%3E%3Cpath d='M10.5 13c0-2.8 2.5-5 5.5-5s5.5 2.2 5.5 5v1.5h1v10H9.5v-10h1V13zm2 1.5h7V13c0-1.9-1.6-3.3-3.5-3.3S12.5 11.1 12.5 13v1.5zm4 1.5c-2 0-3.5.8-3.5 2.2 0 1.2 1 1.8 2.5 2l1.5.2c.8.1 1.2.4 1.2.9 0 .5-.6 1-1.5 1-1.2 0-2-.5-2-1.2h-2c0 2 1.5 3 3.5 3 2.5 0 3.8-1 3.8-2.5 0-1.5-1.2-2-2.5-2.2l-1.5-.2c-.8-.1-1.2-.3-1.2-.8 0-.4.5-.8 1.2-.8 1 0 1.8.4 1.8 1.2h2c0-1.8-1.5-2.8-3.5-2.8z' fill='%23FFF'/%3E%3C/svg%3E",
+      tiktok: "data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%23000'/%3E%3Cpath d='M17 5v14c0 1.6-1.4 3-3 3s-3-1.4-3-3 1.4-3 3-3c.4 0 .8.1 1.2.3V12.2c-.4-.1-.8-.2-1.2-.2-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6V10c1.5 1.5 3.5 2.5 5.5 2.5V8.2c-2.3 0-4.3-1.2-5.5-3.2H17z' fill='%23FFF'/%3E%3C/svg%3E",
+      lazada: "data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%230F146D'/%3E%3Cpath d='M16 23.5l-2-1.8C10 18 7 15 7 11.5c0-2.8 2.2-5 5-5 1.7 0 3.2.8 4 2.2.8-1.4 2.3-2.2 4-2.2 2.8 0 5 2.2 5 5 0 3.5-3 6.5-7 10.2l-2 1.8z' fill='%23F58220'/%3E%3Cpath d='M12 9l8 4-8 4V9z' fill='%23FFF'/%3E%3C/svg%3E",
+      pgmall: "data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%23E31E24'/%3E%3Ctext x='16' y='21.5' font-family='sans-serif' font-weight='900' font-size='14' fill='%23FFF' text-anchor='middle'%3EPG%3C/text%3E%3C/svg%3E",
+      website: "data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%235B6570'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E",
+      sini: "data:image/svg+xml,%3Csvg viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' rx='8' fill='%230F172A'/%3E%3Ctext x='14' y='22' font-family='sans-serif' font-weight='900' font-size='18' fill='%23FFF' text-anchor='middle'%3ES%3C/text%3E%3Crect x='22' y='10.5' width='5.5' height='5.5' fill='%23D4AF37' transform='rotate(45 24.75 13.25)'/%3E%3C/svg%3E"
+    };
+
+    function platformIcon(id) {
+      var ic = el('span', 'w-6 h-6 rounded-md bg-white border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0');
+      var img = document.createElement('img');
+      img.src = LOGO_IMG[id] || LOGO_IMG.website;
+      img.alt = '';
+      img.width = 24; img.height = 24;
+      img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'contain';
+      ic.appendChild(img);
+      return ic;
+    }
+
+    function renderTabs() {
+      var t = $('tabs');
+      t.textContent = '';
+      ORDER.forEach(function (id) {
+        var p = S.platforms[id];
+        var b = el('button', 'pill');
+        b.type = 'button';
+        b.setAttribute('aria-selected', String(S.plat === id));
+        b.appendChild(platformIcon(id));
+        b.appendChild(document.createTextNode(p.name));
+        b.addEventListener('click', function () {
+          S.plat = id;
+          renderTabs();
+          renderEditor();
+          renderResults();
+        });
+        t.appendChild(b);
+      });
+    }
+
+    function renderEditor() {
+      var ed = $('editor');
+      ed.textContent = '';
+      var platform = S.platforms[S.plat];
+
+      var header = el('div', 'flex items-center justify-between border-b border-slate-200 pb-2 mb-3');
+      header.appendChild(el('span', 'font-bold text-xs text-slate-800 uppercase tracking-wider', 'Konfigurasi: ' + platform.name));
+      if (platform.planned) header.appendChild(el('span', 'badge badge-warn', 'Akan Datang'));
+      ed.appendChild(header);
+
+      platform.lines.forEach(function (l) {
+        var row = el('div', 'bg-white p-3 rounded-lg border border-slate-200 space-y-2');
+        var top = el('div', 'flex items-center justify-between gap-2 flex-wrap');
+
+        var left = el('div', 'flex items-center gap-2');
+        if (l.optional) {
+          var label = el('label', 'flex items-center gap-2 cursor-pointer');
+          var cb = document.createElement('input');
+          cb.type = 'checkbox'; cb.checked = l.on; cb.className = 'w-4 h-4 accent-slate900 rounded';
+          cb.addEventListener('change', function () { l.on = cb.checked; renderResults(); });
+          label.appendChild(cb);
+          label.appendChild(el('span', 'font-bold text-xs text-slate-800', l.label));
+          left.appendChild(label);
+        } else {
+          left.appendChild(el('span', 'font-bold text-xs text-slate-800', l.label));
+        }
+        left.appendChild(chip(l.conf));
+        top.appendChild(left);
+
+        var right = el('div', 'flex items-center gap-2');
+        var inpWrap = el('div', 'in');
+        inpWrap.style.maxWidth = '120px'; inpWrap.style.minHeight = '38px';
+
+        var inp = document.createElement('input');
+        inp.type = 'number'; inp.inputMode = 'decimal'; inp.step = '0.01'; inp.min = '0'; inp.value = l.value;
+        if (platform.planned) { inp.readOnly = true; inp.disabled = true; inp.value = '-'; }
+
+        inp.addEventListener('input', function () {
+          var v = parseFloat(inp.value);
+          l.value = Number.isFinite(v) && v >= 0 ? v : 0;
+          if (l.conf !== 'planned') l.conf = 'you';
+          renderEditor();
+          renderResults();
+        });
+        inpWrap.appendChild(inp);
+        inpWrap.appendChild(el('span', 'text-xs', l.kind === 'flat' ? 'RM' : '%'));
+        right.appendChild(inpWrap);
+
+        if (!platform.planned) {
+          var sstBtn = el('button', 'pill text-xs', l.sst === 'incl' ? 'SST Termasuk (8%)' : '+ SST (8%)');
+          sstBtn.type = 'button'; sstBtn.style.minHeight = '38px';
+          sstBtn.addEventListener('click', function () {
+            l.sst = l.sst === 'incl' ? 'excl' : 'incl';
+            renderEditor(); renderResults();
+          });
+          right.appendChild(sstBtn);
+        }
+
+        row.appendChild(top);
+        if (l.note) row.appendChild(el('p', 'text-[11px] text-slate-500', l.note));
+        row.appendChild(right);
+        ed.appendChild(row);
+      });
+    }
+
+    function renderHero(cur) {
+      var h = $('hero');
+      h.textContent = '';
+
+      var topRow = el('div', 'flex items-center justify-between');
+      var lft = el('div', 'flex items-center gap-2 text-xs text-slate-300 font-medium');
+      lft.appendChild(platformIcon(cur.platform));
+      lft.appendChild(document.createTextNode('Pendapatan Bersih (Take-Home): ' + cur.name));
+      topRow.appendChild(lft);
+      topRow.appendChild(el('span', 'badge bg-slate-800 text-slate-200 border border-slate-700', 'Audit Ready'));
+      h.appendChild(topRow);
+
+      if (cur.isComingSoon) {
+        h.appendChild(el('div', 'text-4xl font-black tracking-tight text-white my-2', 'Akan Datang'));
+        h.appendChild(el('p', 'text-xs text-slate-400', 'Struktur kadar platform Sinii sedang dalam fasa pembangunan.'));
+        return;
+      }
+
+      h.appendChild(el('div', 'text-4xl sm:text-5xl font-bold tracking-tight text-white my-2', fmt(cur.keep)));
+
+      var gridMeta = el('div', 'grid grid-cols-2 gap-4 pt-3 border-t border-slate-800 text-xs text-slate-300');
+      gridMeta.innerHTML = '<div>Jumlah Yuran: <strong class="text-white block text-sm mt-0.5">' + fmt(cur.fee) + ' (' + pct(cur.feePct) + ')</strong></div>' +
+                           '<div>Untung Bersih: <strong class="text-emerald-400 block text-sm mt-0.5">' + fmt(cur.profit) + ' (Margin ' + pct(cur.marginPct) + ')</strong></div>';
+      h.appendChild(gridMeta);
+
+      var brk = el('div', 'space-y-1.5 pt-3 border-t border-slate-800 text-xs text-slate-400');
+      cur.lines.forEach(function (l) {
+        var row = el('div', 'flex justify-between items-center' + ((l.off || l.waived) ? ' opacity-40 line-through' : ''));
+        row.appendChild(el('span', null, l.label));
+        row.appendChild(el('span', 'font-medium text-slate-200', (l.off || l.waived) ? 'RM0.00' : fmt(l.amount)));
+        brk.appendChild(row);
+      });
+      h.appendChild(brk);
+    }
+
+    function renderComparison(cmp) {
+      var note = $('cmpnote');
+      var gapEl = $('gap');
+      var list = $('cmp');
+      var tableWrap = $('cmpTable');
+
+      note.textContent = cmp.best ? 'Analisis platform terbaik berdasarkan kadar sah yang dimasukkan.' : 'Masukkan kadar pada sekurang-kurangnya 2 platform untuk perbandingan terbaik.';
+
+      // Cards
+      list.textContent = '';
+      cmp.rows.forEach(function (r) {
+        var isBest = cmp.best && cmp.best.platform === r.platform;
+        var card = el('div', 'p-4 rounded-xl border ' + (isBest ? 'border-slate-900 bg-slate-50 shadow-sm' : 'border-slate-200 bg-white') + ' flex items-center justify-between');
+
+        var lft = el('div', 'flex items-center gap-3');
+        lft.appendChild(platformIcon(r.platform));
+        var inf = el('div');
+        var nm = el('div', 'font-bold text-sm text-slate-900 flex items-center gap-2');
+        nm.appendChild(document.createTextNode(r.name));
+        if (isBest) nm.appendChild(el('span', 'badge bg-slate-900 text-white', 'Pilihan Terbaik'));
+        inf.appendChild(nm);
+        inf.appendChild(el('div', 'text-xs text-slate-500', r.isComingSoon ? 'TBA' : ('Yuran ' + fmt(r.fee) + ' (' + pct(r.feePct) + ')')));
+        lft.appendChild(inf);
+        card.appendChild(lft);
+
+        var rgt = el('div', 'text-right');
+        rgt.appendChild(el('div', 'font-bold text-base text-slate-900', r.isComingSoon ? 'Akan Datang' : fmt(r.keep)));
+        rgt.appendChild(el('div', 'text-xs text-slate-500', r.isComingSoon ? '-' : ('Untung ' + fmt(r.profit))));
+        card.appendChild(rgt);
+
+        list.appendChild(card);
+      });
+
+      // Table
+      tableWrap.textContent = '';
+      var table = el('table', 'w-full text-left text-xs bg-white');
+      var thead = el('thead', 'bg-slate-100 border-b border-slate-200 text-slate-700 font-bold');
+      var hr = el('tr');
+      ['Platform', 'Pendapatan (Take-Home)', 'Jumlah Yuran', 'Margin Bersih'].forEach(function (t, idx) {
+        var th = el('th', 'p-3', t);
+        if (idx > 0) th.className += ' text-right';
+        hr.appendChild(th);
+      });
+      thead.appendChild(hr);
+      table.appendChild(thead);
+
+      var tbody = el('tbody', 'divide-y divide-slate-200');
+      cmp.rows.forEach(function (r) {
+        var isBest = cmp.best && cmp.best.platform === r.platform;
+        var tr = el('tr', isBest ? 'bg-slate-50 font-semibold' : '');
+
+        var nCell = el('td', 'p-3 flex items-center gap-2');
+        nCell.appendChild(platformIcon(r.platform));
+        nCell.appendChild(document.createTextNode(r.name));
+        if (isBest) nCell.appendChild(el('span', 'badge bg-slate-900 text-white text-[10px]', 'Best'));
+        tr.appendChild(nCell);
+
+        if (r.isComingSoon) {
+          tr.appendChild(el('td', 'p-3 text-right text-slate-400', 'Akan Datang'));
+          tr.appendChild(el('td', 'p-3 text-right text-slate-400', '-'));
+          tr.appendChild(el('td', 'p-3 text-right text-slate-400', '-'));
+        } else {
+          tr.appendChild(el('td', 'p-3 text-right font-bold text-slate-900', fmt(r.keep)));
+          tr.appendChild(el('td', 'p-3 text-right text-slate-500', pct(r.feePct)));
+          tr.appendChild(el('td', 'p-3 text-right text-slate-500', pct(r.marginPct)));
+        }
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      tableWrap.appendChild(table);
+
+      // Gap calculation
+      var cur = calc(S, S.plat);
+      var gap = cmp.best && cmp.best.platform !== S.plat && !cur.planned && !cur.hasExample
+        ? (cmp.best.keep - cur.keep) * S.orders : 0;
+      if (gap > 0) {
+        gapEl.textContent = 'Berdasarkan ' + S.orders + ' pesanan sebulan, potensi penjimatan bersih ialah ~' + fmt(Math.round(gap * 100)) + ' sebulan di ' + cmp.best.name + '.';
+      } else {
+        gapEl.textContent = '';
+      }
+
+      if (viewMode === 'cards') {
+        list.hidden = false; tableWrap.hidden = true;
+        $('viewCards').className = 'px-3 py-1.5 rounded-md transition text-slate-900 bg-white shadow-sm';
+        $('viewTable').className = 'px-3 py-1.5 rounded-md transition text-slate-500 hover:text-slate-900';
+      } else {
+        list.hidden = true; tableWrap.hidden = false;
+        $('viewCards').className = 'px-3 py-1.5 rounded-md transition text-slate-500 hover:text-slate-900';
+        $('viewTable').className = 'px-3 py-1.5 rounded-md transition text-slate-900 bg-white shadow-sm';
+      }
+    }
+
+    function renderTarget() {
+      var targetPct = parseFloat($('targetPct').value) || 0;
+      var plat = $('targetPlat').value;
+      var res = $('targetResult');
+
+      if (plat === 'sini') {
+        res.textContent = 'Kalkulator sasaran margin untuk Sinii akan diaktifkan sebaik sahaja struktur rasmi dilancarkan.';
+        return;
+      }
+
+      var mp = minPrice(S, plat, targetPct);
+      var name = S.platforms[plat].name;
+      if (mp == null) {
+        res.textContent = 'Tidak dapat mencapai margin ' + targetPct + '% di ' + name + ' dengan kos semasa.';
+      } else {
+        res.innerHTML = 'Untuk mencapai margin bersih <strong>' + targetPct + '%</strong> di <strong>' + name + '</strong>, harga jualan minimum yang disyorkan ialah <strong class="text-slate-900 text-base">RM' + mp.toFixed(2) + '</strong>.';
+      }
+    }
+
+    function renderResults() {
+      readSale();
+      var cur = calc(S, S.plat);
+      var cmp = compare(S);
+      renderHero(cur);
+      renderComparison(cmp);
+      renderTarget();
+    }
+
+    function exportAuditReport() {
+      readSale();
+      var cur = calc(S, S.plat);
+      var text = "=== SINII KIRA ENTERPRISE AUDIT REPORT ===\n" +
+        "Laman Rasmi: www.sinii.my (Emel: admin@sinii.my)\n" +
+        "Tarikh Audit: 30 Okt 2026\n" +
+        "Pematuhan: Akta Perlindungan Pengguna 1999 & Akta PDPA 2010\n\n" +
+        "Parameter Jualan:\n" +
+        "- Harga Jual: RM" + S.price.toFixed(2) + "\n" +
+        "- Kos Modal (COGS): RM" + S.cost.toFixed(2) + "\n" +
+        "- Komisen Afiliat: " + S.aff + "%\n" +
+        "- Margin Reseller / Agent: " + S.reseller + "%\n\n" +
+        "Hasil Platform (" + cur.name + "):\n" +
+        "- Pendapatan Bersih (Take-Home): " + fmt(cur.keep) + "\n" +
+        "- Jumlah Yuran Platform & Potongan: " + fmt(cur.fee) + " (" + pct(cur.feePct) + ")\n" +
+        "- Untung Bersih: " + fmt(cur.profit) + " (Margin " + pct(cur.marginPct) + ")\n\n" +
+        "Dijana selamat secara tempatan (Client-Side) melalui Sinii Kira Enterprise Financial Suite (www.sinii.my).\n" +
+        "Untuk pertanyaan lanjut: admin@sinii.my";
+
+      var dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = text;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+
+      var t = $('toast');
+      t.classList.add('show');
+      setTimeout(function() { t.classList.remove('show'); }, 2500);
+      
+      // Trigger PDF/Print generation for audit reporting
+      window.print();
+    }
+
+    // Modal Events
+    $('openLegalBtn').addEventListener('click', function() { $('legalModal').classList.add('show'); });
+    $('footerLegalLink').addEventListener('click', function(e) { e.preventDefault(); $('legalModal').classList.add('show'); });
+    $('closeLegalBtn').addEventListener('click', function() { $('legalModal').classList.remove('show'); });
+    $('closeLegalBtn2').addEventListener('click', function() { $('legalModal').classList.remove('show'); });
+
+    // Tab Switching Logic
+    function switchTab(tab) {
+      if (tab === 'landing') {
+        $('viewLanding').classList.remove('hidden');
+        $('viewCalculator').classList.add('hidden');
+        $('tabLanding').className = 'px-4 py-2 rounded-md transition text-slate-900 bg-white shadow-sm border border-slate-200/50';
+        $('tabCalculator').className = 'px-4 py-2 rounded-md transition text-slate-500 hover:text-slate-900';
+      } else {
+        $('viewLanding').classList.add('hidden');
+        $('viewCalculator').classList.remove('hidden');
+        $('tabLanding').className = 'px-4 py-2 rounded-md transition text-slate-500 hover:text-slate-900';
+        $('tabCalculator').className = 'px-4 py-2 rounded-md transition text-slate-900 bg-white shadow-sm border border-slate-200/50';
+        renderTabs();
+        renderEditor();
+        renderResults();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    $('tabLanding').addEventListener('click', function() { switchTab('landing'); });
+    $('tabCalculator').addEventListener('click', function() { switchTab('calculator'); });
+    $('heroStartBtn').addEventListener('click', function() { switchTab('calculator'); });
+
+    // Inputs & Toggles
+    ['price', 'cost', 'ship', 'aff', 'reseller', 'orders', 'targetPct'].forEach(function(id) {
+      $(id).addEventListener('input', renderResults);
+    });
+    $('newShop').addEventListener('change', renderResults);
+    $('supportWaived').addEventListener('change', renderResults);
+    $('targetPlat').addEventListener('change', renderResults);
+
+    $('viewCards').addEventListener('click', function() { viewMode = 'cards'; renderResults(); });
+    $('viewTable').addEventListener('click', function() { viewMode = 'table'; renderResults(); });
+    $('exportAuditBtn').addEventListener('click', exportAuditReport);
+    $('resetBtn').addEventListener('click', function() {
+      S = createState();
+      $('price').value = 89; $('cost').value = 40; $('ship').value = 0; $('aff').value = 0; $('reseller').value = 0; $('orders').value = 100;
+      renderTabs(); renderEditor(); renderResults();
+    });
+
+    // Init
+    switchTab('landing');
+  })();
+  </script>
+</body>
+</html>
